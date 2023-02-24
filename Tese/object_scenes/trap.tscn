@@ -1,0 +1,32 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://sprites/spikes4.png" type="Texture" id=1]
+[ext_resource path="res://object_scenes/trap.gd" type="Script" id=2]
+[ext_resource path="res://sprites/spikes1.png" type="Texture" id=4]
+
+[sub_resource type="SpriteFrames" id=1]
+animations = [ {
+"frames": [ ExtResource( 4 ), ExtResource( 1 ) ],
+"loop": true,
+"name": "default",
+"speed": 0.5
+} ]
+
+[sub_resource type="RectangleShape2D" id=2]
+extents = Vector2( 8.02385, 7.93736 )
+
+[node name="Area2D" type="Area2D"]
+position = Vector2( 8, 8 )
+script = ExtResource( 2 )
+__meta__ = {
+"_edit_group_": true
+}
+
+[node name="AnimatedSprite" type="AnimatedSprite" parent="."]
+frames = SubResource( 1 )
+playing = true
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource( 2 )
+
+[connection signal="body_entered" from="." to="." method="_on_Area2D_body_entered"]

@@ -1,0 +1,37 @@
+[gd_scene load_steps=6 format=2]
+
+[ext_resource path="res://object_scenes/Door_and_Key.gd" type="Script" id=1]
+[ext_resource path="res://sprites/key.png" type="Texture" id=2]
+[ext_resource path="res://sprites/door.png" type="Texture" id=3]
+
+[sub_resource type="RectangleShape2D" id=1]
+extents = Vector2( 8.17293, 8.208 )
+
+[sub_resource type="CapsuleShape2D" id=2]
+radius = 4.242
+height = 9.05672
+
+[node name="Door and Key" type="Node2D"]
+script = ExtResource( 1 )
+
+[node name="Door" type="KinematicBody2D" parent="."]
+position = Vector2( 8, 8 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Door"]
+position = Vector2( 0.051054, -0.0687599 )
+shape = SubResource( 1 )
+
+[node name="Sprite" type="Sprite" parent="Door"]
+texture = ExtResource( 3 )
+
+[node name="Key" type="Area2D" parent="."]
+position = Vector2( 8, 8 )
+
+[node name="Sprite" type="Sprite" parent="Key"]
+texture = ExtResource( 2 )
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Key"]
+position = Vector2( -0.3, 0 )
+shape = SubResource( 2 )
+
+[connection signal="body_entered" from="Key" to="." method="_on_Key_body_entered"]

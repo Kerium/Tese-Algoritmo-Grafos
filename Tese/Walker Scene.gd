@@ -21,10 +21,11 @@ func _ready():
 	randomize()
 	generate_level()
 	node_level_generator()
+	print(get_tree())
 
 func generate_level():
 	var walker = Walker.new(Vector2(15, 9), borders) # Metade do Rect2
-	var map = walker.walk(200)
+	var map = walker.walk(200) #200
 	
 	var player = Player.instance()
 	add_child(player)
@@ -53,7 +54,7 @@ func _input(event):
 
 func node_level_generator():
 	var node_index = randi() % len(NODE_TYPES)
-	var chance = randi() % 5
+	var chance = randi() % 6
 	
 	while rooms_nodes.size() < (rooms.size() - 1):
 		if chance < 3:
@@ -124,7 +125,7 @@ func monster_house():
 	#print(get_tree().get_nodes_in_group("enemies"))
 	# Iterar a lista com nodes de inimigos e remove a posição desses para não sobrepor
 	for i in get_tree().get_nodes_in_group("enemies"):
-		i.position = tileMap.map_to_world(pick_vect(area_list)) 
+		#i.position = tileMap.map_to_world(pick_vect(area_list))
 		i.remove_group()
 		
 
@@ -153,15 +154,17 @@ func puzzle_room():
 func coordenates():
 	var index_list = randi() % len(rooms)
 	var size_x = rooms[index_list].size.x
+	print(size_x)
 	var size_y = rooms[index_list].size.y
 	var center = rooms[index_list].position
-	var width = center.x + size_x
-	var height = center.y + size_y
+	#var width = size_x * 2
+	#var height = size_y * 2
 	var list_result = [] #Vai dar return da area da divisão
 	
-	for i in range(center.x, width):
-		for j in range(center.y, height):
-			list_result.append(Vector2(i,j))
+	for i in range(-size_x, size_x):
+		for j in range(-size_y, size_y):
+			list_result.append(Vector2(center.x + i, center.y + j))
+			#list_result.append(Vector2(center.x - i, center.y -j))
 	rooms.remove(index_list)
 	return list_result
 

@@ -17,36 +17,50 @@ var n_rooms = randi() % 12 #10
 var center_rooms = []
 var total_area = []
 onready var Map = $TileMap
-var temp_room_area = [] # Area da divisão 
-onready var astar = AStar2D.new()
-var path
+var temp_room_area # Area da divisão 
+var temp_draw_room = []
+var draw_total_area = []
 
- 
 func _ready():
 	randomize()
 	generate_rooms()
 	#yield(get_tree().create_timer(2.0), "timeout")
-	#pathfinder()
-	room_features()
+	
 
+func _process(delta):
+	update()
 
 func generate_rooms():
 	var number_generated_rooms = 0
-	var temp_center_rooms = []
 	#var counter = 0 Usar se apenas se começar a demorar muito tempo
 	
 	while number_generated_rooms <= n_rooms:
-		var center_room = Vector2(randi() % 38+4, randi() % 38+4)
-		var width = randi() % 6 + 5
-		var height = randi() % 6 + 5 
+		#yield(get_tree().create_timer(1.0), "timeout")
+		var center_room = Vector2(randi() % 38 + 8, randi() % 38 + 4)
+		var width = randi() % 8 + 5
+		var height = randi() % 8 + 5 
 		var used_cells = Map.get_used_cells()
 		var temp_room_area = [] # Area da divisão 
 		var not_in_used_cells = true
 		
-		
-		for x in range(center_room.x - (width / 2), center_room.x + (width / 2)):
-			for y in range(center_room.y - (height / 2), center_room.y + (height / 2)):
+		for x in range(center_room.x - ceil(width / 2), center_room.x + ceil(width / 2)):
+			for y in range(center_room.y - ceil(height / 2), center_room.y + ceil(height / 2)):
 				temp_room_area.append(Vector2(x, y))
+		
+		temp_draw_room = Rect2(Map.map_to_world(Vector2(center_room.x - ceil(width/2), center_room.y - ceil(height/2))), Map.map_to_world(Vector2(width, height)))
+		
+		#print("temp_draw_room " + str(temp_draw_room))
+		#print("temp_room_area " + str(temp_room_area))
+		
+		#for x in range(center_room.x - (width / 2), center_room.x + (width / 2)):
+		#	temp_draw_room.append(Vector2(x, center_room.y + (height/2)))
+		#	temp_draw_room.append(Vector2(x, center_room.y - (height/2)))
+		#for y in range(center_room.y - (height / 2), center_room.y + (height / 2)):
+		#	temp_draw_room.append(Vector2(center_room.x + (width/2), y))
+		#	temp_draw_room.append(Vector2(center_room.x - (width/2), y))
+		
+		
+		
 		#ORDEM DOS VETORES
 		for x in temp_room_area:
 			if x in used_cells:
@@ -58,198 +72,46 @@ func generate_rooms():
 				Map.update_bitmask_area(cell)
 			total_area.append(temp_room_area)
 			center_rooms.append(center_room)
-			temp_center_rooms.append(center_room)
+			draw_total_area.append(temp_draw_room)
 			number_generated_rooms += 1
-	#print("nº de total area: " + str(len(total_area)))
-	#print("total_area: " + str(total_area))
+		#yield(get_tree(), "idle_frame")
+		yield(get_tree().create_timer(1.2), "timeout")
+
 	
-	path = find_mst(temp_center_rooms)
-	#print("ultimate path: " + str(path))
-	var corridors = []
-	print("Center rooms: " + str(center_rooms))
-	var counter = 0
-	for room in center_rooms:
-		#var p = path.get_closest_point(Vector2(room.x, room.y))
-		var p = counter
-		for conn in path.get_point_connections(p):
-			if not conn in corridors: #Map.map_to_world
-				var start = (Vector2(path.get_point_position(p).x, path.get_point_position(p).y))
-				var end = (Vector2(path.get_point_position(conn).x, path.get_point_position(conn).y))
-				#print("start: " + str(start))
-				#print("end: " + str(end))
-				carve_path(start, end)
-		counter += 1
-		corridors.append(p)
-	#print("Centro dos rooms: " + str(center_rooms))
-	#for i in range(0, center_rooms.size() - 1):
-		#carve_path(center_rooms[i], center_rooms[i + 1])
+	print("Centro dos rooms: " + str(center_rooms))
+	for i in range(0, center_rooms.size() - 1):
+		carve_path(center_rooms[i], center_rooms[i + 1])
 	#print("Total area: " + str(total_area))
-"""
-func pathfinder():
-	var room_list = []
-	var vect_index
-	var neighbors = [Vector2(1, 0), Vector2(-1, 0), Vector2(0, 1), Vector2(0, -1)] 
-	var first_point = Vector2.ZERO
-	var list_for_lists = []
-	#print("Rooms positions: " + str(total_area))
-	#print(len(total_area))
-	for i in range (0, len(total_area)): #Não "-1" pq para no proprio numero
-		#Tentar garantir que não sai de lado TESTAR
-		var boolean = true
-		while boolean:
-			vect_index = randi() % len(total_area[i]) 
-			for j in neighbors:
-				var next_cell = total_area[i][vect_index] + j
-				if !((total_area[i][vect_index] - first_point) in neighbors) and ((total_area[i][vect_index] - first_point) != Vector2.ZERO):
-					room_list.append(total_area[i][vect_index])
-					boolean = false
-					break
-		if i == len(total_area) - 1:
-			vect_index = randi() % len(total_area[0]) 
-			room_list.append(total_area[0][vect_index])
-			#var count = 1
-	room_list.clear()
-	for i in total_area:
-		print("eu corri")
-		var index = randi() % len(i)
-		room_list.append(i[index])
-		
-	print("Room List: " + str(room_list))
 	
-	astar.reserve_space((60 + 4) * (60 + 4)) #width vs height
-	
-	var count = 0
-	for i in range (0, 60 + 4):
-		for j in range (0, 60 + 4):
-			astar.add_point(count, Vector2(i, j))  #id(Vector2(i, j))
-			count +=1
-	
-	for i in range(0, 4096): #astar.get_point_count()
-		var cell = astar.get_point_position(i)
-		print(str(cell))
-		for neighbor in neighbors:
-			var next_cell = cell + neighbor
-			astar.connect_points(point_id(cell), point_id(next_cell))
-	
-	#Vertical
-	for i in range(0, (50 + 2), 4):
-		for j in range (0, (50 + 2)):
-			var cell = Vector2(i, j)
-			var next_cell = cell + Vector2(0, 1)
-			astar.connect_points(point_id(cell), point_id(next_cell))
-			next_cell = cell + Vector2(0, -1)
-			astar.connect_points(point_id(cell), point_id(next_cell))
+	room_features()
 
-	#Horizontal
-	for i in range (0, (50 + 2)):
-		for j in range(0, (50 + 2)):
-			#Para Baixo
-			var cell = Vector2(j, i)
-			var next_cell = cell + Vector2(1, 0)
-			astar.connect_points(point_id(cell), point_id(next_cell))
-			next_cell = cell + Vector2(-1, 0)
-			astar.connect_points(point_id(cell), point_id(next_cell))
-			
-	for i in room_list:
-		for j in neighbors:
-			var next_cell = i + j
-			astar.connect_points(point_id(i), point_id(next_cell))
-	
-	for i in range(0, room_list.size()-1):
-		var path = astar.get_point_path(point_id(room_list[i]), point_id(room_list[i + 1]))
-		print("room_list 1: " + str(room_list[i]))
-		print("room_list 2: " + str(room_list[i+1]))
-		#print("path: " + str(path))
-		for j in path:
-			Map.set_cellv(j, 0)
-			Map.update_bitmask_area(j)
-	
-	
-	for i in range (0, room_list.size() - 1, 2):
-		var total_path = []
-		var used_cells = Map.get_used_cells()
-		var path = Map.get_astar_path_avoiding_obstacles(room_list[i], room_list[i + 1]) #astar.get_point_path(point_id(room_list[i]), point_id(room_list[i + 1]))
-		print("Path: " + str(path))
-		if !((room_list[i] + Vector2.RIGHT) in used_cells) or !((room_list[i] + Vector2.LEFT) in used_cells):
-			var temp_point = Vector2(room_list[i+1].x, room_list[i].y)
-			path = Map.get_astar_path_avoiding_obstacles(room_list[i], temp_point) 
-			total_path.append_array(path)
-			for j in range (0, path.size()):
-				Map.set_cellv(path[j], 0)
-				Map.update_bitmask_area(path[j])
-				var obstacle = Obstacle.instance()
-				obstacle.position = Map.map_to_world(path[j])
-				Map.add_child(obstacle)
-				
-			#tileMap.obstacle_update()
-			path = Map.get_astar_path_avoiding_obstacles(temp_point, room_list[i + 1])
-			total_path.append_array(path)
-			for j in range (0, path.size()):
-				Map.set_cellv(path[j], 0)
-				Map.update_bitmask_area(path[j])
-				var obstacle = Obstacle.instance()
-				obstacle.position = Map.map_to_world(path[j])
-				Map.add_child(obstacle)
-			print("O direita esquerda correu")
-		
-		elif !((room_list[i] + Vector2.UP) in used_cells) or !((room_list[i] + Vector2.DOWN) in used_cells):
-			var temp_point = Vector2(room_list[i].x, room_list[i+1].y)
-			path = Map.get_astar_path_avoiding_obstacles(room_list[i], temp_point)
-			total_path.append_array(path)
-			for j in range (0, path.size()):
-				Map.set_cellv(path[j], 0)
-				Map.update_bitmask_area(path[j])
-				var obstacle = Obstacle.instance()
-				obstacle.position = Map.map_to_world(path[j])
-				Map.add_child(obstacle)
-			
-			#tileMap.obstacle_update()
-			path = Map.get_astar_path_avoiding_obstacles(temp_point, room_list[i + 1])
-			total_path.append_array(path)
-			for j in range (0, path.size()):
-				Map.set_cellv(path[j], 0)
-				Map.update_bitmask_area(path[j])
-				var obstacle = Obstacle.instance()
-				obstacle.position = Map.map_to_world(path[j])
-				Map.add_child(obstacle)
-			print("O cima baixo correu")
-		else:
-			print("path " + str(path))
-			total_path.append_array(path)
-			for j in range (0, path.size()):
-				Map.set_cellv(path[j], 0)
-				Map.update_bitmask_area(path[j])
-				var obstacle = Obstacle.instance()
-				obstacle.position = Map.map_to_world(path[j])
-				Map.add_child(obstacle)
-		#tileMap.obstacle_update()
-"""
 
-func find_mst(vectors):
-	# Prim's algorithm
-	var path = AStar2D.new()
-	path.add_point(path.get_available_point_id(), vectors.pop_front())
+
+func _draw():
+	#Fazer for loop dos vectores em temp_draw_room
 	
-	# repeat until no more nodes remain
+	draw_rect(temp_draw_room, Color(255, 0, 0), false)
+	for x in draw_total_area:
+		draw_rect(x, Color(0, 0, 255), false)
+		#print("drawing")
+	#draw_rect(Rect2(room.position - room.size, room.size * 2), Color(32, 228, 0), false)
+
+func manhattan_distance_list(start_point, index_room):
+	var used_points = Map.get_used_cells()
+	var temp_total_area = total_area
+	var lowest_distance = 1000
+	var my_point
 	
-	while vectors:
-		var min_dist = INF # Minimum distance so far
-		var min_p = null
-		var p = null
-		# Loop through all points in path
-		for p1 in path.get_points():
-			p1 = path.get_point_position(p1)
-			# Loop through the remaining nodes
-			for p2 in vectors:
-				if p1.distance_to(p2) < min_dist:
-					min_dist = p1.distance_to(p2)
-					min_p = p2
-					p = p1
-		var n = path.get_available_point_id()
-		path.add_point(n, min_p)
-		path.connect_points(path.get_closest_point(p), n)
-		vectors.erase(min_p)
-	return path
+	for i in temp_total_area[index_room]:
+		used_points.erase(i)
+	
+	for i in used_points:
+		var distance = abs(i.x - start_point.x) + abs(i.y - start_point.y)
+		if distance <= lowest_distance:
+			lowest_distance = distance
+			my_point = i
+	print("My point: " + str(my_point))
+	return my_point
 
 func carve_path(pos1, pos2):
 	#Carve a path between 2 points
@@ -279,15 +141,15 @@ func carve_path(pos1, pos2):
 
 func room_features():
 	var nodes = ["entry", "end"]
-	var chance = randi() % 7
+	var chance = randi() % 6
 	var node_index = randi() % len(NODE_TYPES)
 	
 	while nodes.size() < (total_area.size() - 1) and nodes.size() < n_rooms:
-		if chance < 6:
+		if chance < 5:
 			nodes.append(NODE_TYPES[node_index])
 		else:
 			break
-		chance = randi() % 7
+		chance = randi() % 6
 		node_index = randi() % len(NODE_TYPES)
 	
 	var spawn = funcref(self, "spawn")
@@ -336,7 +198,7 @@ func lock_and_key(point):
 	var door_and_key = Door_and_key.instance()
 	add_child(door_and_key)
 	door_and_key.get_node("Door").position = Map.map_to_world(point)
-	door_and_key.get_node("Key").position = Map.map_to_world(total_area[index][randi() % len(total_area[index])])
+	door_and_key.get_node("Key").position = Map.map_to_world(total_area[index][randi() % len(total_area[index])]) #rooms_positions[key_index][randi() % len(rooms_positions[key_index])]
 	#print("Key vect: " + str(door_and_key.get_node("Key").position))
 
 func empty_room():
@@ -513,8 +375,3 @@ func puzzle_room():
 	var num_max = int(num_min * 2)
 	puzzle.position = Map.map_to_world(total_area[room_index][randi() % num_max + num_min])
 	add_child(puzzle)
-
-func point_id(vect):
-	var a = vect.x
-	var b = vect.y
-	return a * (60 + 4) + b

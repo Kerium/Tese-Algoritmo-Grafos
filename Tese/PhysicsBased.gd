@@ -17,7 +17,7 @@ var num_rooms = 50
 var min_size = 4
 var max_size = 10
 #how much we want the room layout to be bias to be horizontal
-var horizontal_spread = 0 # AKA torna a geração horizontal
+var horizontal_spread = 100 # AKA torna a geração horizontal
 var cull = 0.5
 
 var path # Astar pathfinding object
@@ -57,7 +57,7 @@ func make_rooms():
 	
 
 
-"""
+# Comentar aqui
 func _draw():
 	for room in $Rooms.get_children():
 		draw_rect(Rect2(room.position - room.size, room.size * 2), Color(32, 228, 0), false)
@@ -68,7 +68,7 @@ func _draw():
 				var pp = path.get_point_position(p)
 				var cp = path.get_point_position(c)
 				draw_line(Vector2(pp.x, pp.y), Vector2(cp.x, cp.y), Color(1, 1, 0), 15, true)
-"""
+
 func _process(delta):
 	update()
 
@@ -280,3 +280,4 @@ func puzzle_room():
 	var area_list = room_areas[index]
 	puzzle.position = Map.map_to_world(area_list[randi() % len(area_list)]) 
 	add_child(puzzle)
+	room_areas.remove(index)

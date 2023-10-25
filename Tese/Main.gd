@@ -102,8 +102,9 @@ func new_nodes():
 	}
 	
 	print("length de nodes: " + str(len(nodes_list))) #talvez apagar
-	# Gerar sempre 2 rooms no minimo
+	# Gerar sempre 3 rooms no minimo
 	nodes_list[list_choice].append(NODE_TYPES[randi() % len(NODE_TYPES)])
+	nodes_list[list_choice].append(NODE_TYPES[randi() % len(NODE_TYPES)]) 
 	nodes_list[list_choice].append(NODE_TYPES[randi() % len(NODE_TYPES)]) 
 
 	while rand_number < 3:
